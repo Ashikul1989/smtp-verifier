@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template_string
 import re
 import dns.resolver
 import smtplib
@@ -7,11 +7,13 @@ app = Flask(__name__)
 
 EMAIL_REGEX = re.compile(r"^[^@]+@[^@]+\.[^@]+$")
 
+HTML_TEMPLATE = open("index.html", "r").read()
+
 def check_mx(domain):
     try:
         records = dns.resolver.resolve(domain, 'MX')
         return sorted([(r.preference, str(r.exchange)) for r in records])
-    except Exception:
+    except:
         return None
 
 def smtp_check(email, mx_records):
@@ -45,7 +47,4 @@ def index():
                 continue
             is_valid = smtp_check(email, mx)
             results.append((email, '✅ Valid' if is_valid else '❌ SMTP Failed'))
-    return render_template('index.html', results=results)
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    return render_template_string(HTML_TEMPLATE, results=results)
